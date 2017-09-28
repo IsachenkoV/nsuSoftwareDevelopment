@@ -10,24 +10,24 @@ class Array
       _start = (t_ind - 1) * part_size 
       _end = t_ind == thread_count ? size : t_ind * part_size
       part = self[_start..._end]
-      Thread.new(part) { Thread.current[:out] = yield part }.join
-    end.flat_map { |thread| thread[:out] }
+      Thread.new(part) { Thread.current[:out] = yield part }
+    end.flat_map { |thread| thread.join[:out] }
   end
   
   def my_all? (&block)
-    result = threading { |part| value = part.all?(&block) }.all?
+    result = threading { |part| part.all?(&block) }.all?
   end
   
   def my_any? (&block)
-    result = threading { |part| value = part.any?(&block) }.any?
+    result = threading { |part| part.any?(&block) }.any?
   end
   
   def my_map (&block)
-    result = threading { |part| value = part.map(&block) }
+    result = threading { |part| part.map(&block) }
   end
   
   def my_select (&block)
-    result = threading { |part| value = part.select(&block) }
+    result = threading { |part| part.select(&block) }
   end
 end
 
