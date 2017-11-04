@@ -1,27 +1,42 @@
 (ns .main
     (require [clojure.test :as test]))
+	
+(def step 0.02)
+(defn getPart [f i]
+  (* (/ (+ 
+          (f (* i step)) 
+          (f (* (+ i 1) step))
+        ) 
+      2)
+  step)
+)
 
-(def step 0.005)
-
-(defn getIntegral [f cur_x x]
-  (if 
-      (< 
-         (+ cur_x step) 
-         x)
+(def getIntegral
+  (memoize
+    (fn [f cur_idx]
       (+
-        (getIntegral f (+ cur_x step) x)
-        (* (/ (+ 
-                 (f cur_x) 
-                 (f (+ cur_x step))
-              ) 
-            2) 
-        step)
+        (if 
+          (> (- cur_idx 1) 0 )
+          (getIntegral f (- cur_idx 1))
+          0
+        )
+        (getPart f (- cur_idx 1))
       )
-      (* (/ (+ 
-               (f cur_x) 
-               (f x)) 
-          2) 
-      step)
+    )
+  )
+)
+
+(defn getPrimitive [f x]
+  (def all_idx (int (/ x step)))
+  (+
+    (getIntegral f all_idx)
+    ; add tail to integral
+    (* (/ (+ 
+            (f (* all_idx step)) 
+            (f x))
+        2) 
+     (- x (* all_idx step))
+    )
   )
 )
 
@@ -29,19 +44,15 @@
   (* 2 x)
 )
 
-(defn getPrimitive [f x]
-  (def fm (memoize getIntegral))
-  (fm f 0 x)
-)
-
-(time (getPrimitive foo, 5))
-(time (getPrimitive foo, 1))
+(time (getPrimitive foo, 3))
 (time (getPrimitive foo, 2))
+(time (getPrimitive foo, 2))
+(time (getPrimitive foo, 1.5))
 
 (test/deftest test1
-  (test/is (= (int (Math/floor (getIntegral foo 0 5))) 25)))
+  (test/is (= (int (Math/floor (getIntegral foo 150))) 9)))
 
 (test/deftest test2
-  (test/is (= (int (Math/floor (getPrimitive foo 5))) 25)))
+  (test/is (= (int (Math/floor (getPrimitive foo 3))) 9)))
 
 (test/run-tests '.main)
