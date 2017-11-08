@@ -22,15 +22,12 @@
         (fn [el] (first el))
         (iterate
           (fn [sum_and_seq]
-            (list (+ (first sum_and_seq) 
-                     (if 
-                        (nil? (first (second sum_and_seq)))
-                        0
-                        (first (second sum_and_seq)))
+            (list (+  (first sum_and_seq) 
+                      (first (second sum_and_seq))
                   )
                   (rest (second sum_and_seq)))
           )
-          (list 0 (map (fn [el] (getPart f el)) (take idx naturals)))
+          (list 0 (map (fn [el] (getPart f el)) naturals))
         )
       )
       idx
