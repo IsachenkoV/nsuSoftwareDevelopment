@@ -12,23 +12,23 @@
 (defn move-negation [expr])
 			
 (defn de-morgan [expr]
-	(print "START de ")
-	(print expr)
-	(println " ")
+	;(print "START de ")
+	;(print expr)
+	;(println " ")
 	(if (atom? expr)
 		(if (constant? expr)
 			(constant (not (second expr)))
 			(my-not expr))
 		(if (my-not? expr)
-			(rest expr)
+			(apply concat (rest expr))
 			(if (my-and? expr)
-				(my-or  (map move-negation (map my-not (rest expr))))
-				(my-and (map move-negation (map my-not (rest expr))))))))
+				(cons :or (map move-negation (map my-not (rest expr))))
+				(cons :and (map move-negation (map my-not (rest expr))))))))
 				
 (defn move-negation [expr]
-	(print "START mv ")
-	(print expr)
-	(println " ")
+	;(print "START mv ")
+	;(print expr)
+	;(println " ")
 	(if (my-not? expr)
 		;then
 		(de-morgan (apply concat (rest expr)))

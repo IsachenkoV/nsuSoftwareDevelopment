@@ -9,5 +9,5 @@
   ;(println (delete-impls (my-impl (constant false) (constant true))))
   ;(println (make-dnf (my-impl (constant false) (constant true))))
   ;(println (make-dnf (my-and (variable :x) (my-impl (variable :x) (constant true)))))
-  (println (make-dnf (my-not (my-and (variable :x) (variable :y))))))
-  
+  (println (make-dnf (my-not (my-and (variable :x) (variable :y)))))
+  (println (make-dnf (my-not (my-or (my-or (my-not (variable :x)) (variable :y)) (my-not (my-or (my-not (variable :y)) (variable :z))))))))
