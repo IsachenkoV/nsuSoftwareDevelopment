@@ -62,3 +62,8 @@
 
 (defn atom? [expr]
 	(or (constant? expr) (variable? expr)))
+	
+(defn only-args [expr]
+	(if (or (my-or? expr) (my-and? expr))
+		(rest expr)
+		(list expr)))
