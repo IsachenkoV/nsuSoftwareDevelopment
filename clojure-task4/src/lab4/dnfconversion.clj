@@ -4,7 +4,7 @@
 (defn delete-impls [expr]
 	;(:impl expr1 expr2) = (:or (:not expr1) expr2)
 	(if (my-impl? expr)
-		(my-or (my-not (get-expr-arg expr 1)) (get-expr-arg expr 2))
+		(my-or (my-not (delete-impls (get-expr-arg expr 1))) (delete-impls (get-expr-arg expr 2)))
 		(if (atom? expr)
 			expr
 			(cons (get-expr-arg expr 0) (map delete-impls (rest expr))))))
@@ -84,13 +84,73 @@
 				(reduce distribution nargs)))))
 
 (defn make-one [expr]
-	(if (empty? (rest (rest expr)))
-		(apply concat (rest expr))
-		expr))
+	(let [cur_res 
+			(if (empty? (rest (rest expr)))
+				(apply concat (rest expr))
+				expr)]
+			(if (empty? (rest cur_res))
+				(constant false)
+				cur_res)))
 				
-(defn make-dnf [expr]
-	(make-one
-		(normalize
-			(move-negation 
-				(delete-impls expr)))))
+(defn have-false [arglist]
+	(some #(= (constant false) %) arglist))
+
+(defn have-true [arglist]
+	(some #(= (constant true) %) arglist))
 	
+(defn simplify-or [expr]
+	(if (have-true (rest expr))
+		(constant true)
+		(make-one
+			(concat (list :or) 
+				(distinct
+				(reduce 
+					(fn [res el]
+						(if (= (constant false) el)
+							(concat res '())
+							(concat res (list el))))
+					'()
+					(rest expr)))))))
+
+(defn remove-true [expr]
+	(let [nexpr 
+		(reduce
+			(fn [res el]
+				(if (= (constant true) el)
+					(concat res '())
+					(concat res (list el))))
+			(list :and)
+			(rest expr))]
+		(if (empty? (rest nexpr))
+			(list (constant true))
+			(if (empty? (rest (rest nexpr)))
+				(rest nexpr)
+				(list nexpr)))))
+	
+(defn simplify [expr]
+	(simplify-or
+		(reduce
+			(fn [res el]
+				(if (my-and? el)
+					(if (have-false (rest el))
+						(concat res '())
+						(concat res (remove-true el)))
+					(concat res (list el))))
+			(list :or)
+			(rest expr))))
+			
+(defn my-distinct-and [expr]
+	(reduce 
+		(fn [res el]
+			(if (or (atom? el) (my-not? el))
+				(concat res (list el))
+				(concat res (list (concat (list :and) (distinct (rest el)))))))
+		(list :or)
+		(rest expr)))
+		
+(defn make-dnf [expr]
+	(simplify
+		(my-distinct-and
+			(normalize
+				(move-negation 
+					(delete-impls expr))))))
